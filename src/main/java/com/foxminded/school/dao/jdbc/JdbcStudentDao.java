@@ -1,6 +1,7 @@
 package com.foxminded.school.dao.jdbc;
 
-import com.foxminded.school.dao.ConnectionProvider;
+import com.foxminded.school.dao.DAOException;
+import com.foxminded.school.dao.DataSource;
 import com.foxminded.school.dao.StudentDao;
 import com.foxminded.school.domain.Course;
 import com.foxminded.school.domain.Student;
@@ -12,8 +13,10 @@ import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.logging.Logger;
 
 public class JdbcStudentDao implements StudentDao {
+    private static final Logger log = Logger.getLogger(JdbcStudentDao.class.getName());
     private static final String GET_ALL = "SELECT * FROM students";
     private static final String INSERT = "INSERT INTO students (group_id, first_name, last_name) VALUES (?, ?, ?)";
     private static final String DELETE = "DELETE FROM students WHERE student_id = ?";
@@ -29,28 +32,31 @@ public class JdbcStudentDao implements StudentDao {
     private static final String DELETE_FROM_COURSE =
             "DELETE FROM students_courses WHERE student_id = ? AND course_id = ?";
 
-    private final ConnectionProvider connectionProvider;
+    private final DataSource dataSource;
 
-    public JdbcStudentDao(ConnectionProvider connectionProvider) {
-        this.connectionProvider = connectionProvider;
+    public JdbcStudentDao(DataSource dataSource) {
+        this.dataSource = dataSource;
     }
 
     @Override
-    public List<Student> getAllStudents() {
-        List<Student> result = new ArrayList<>();
-        try (Connection connection = connectionProvider.getConnection();
+    public List<Student> getAllStudents() throws DAOException {
+        List<Student> result;
+        try (Connection connection = dataSource.getConnection();
              PreparedStatement statement = connection.prepareStatement(GET_ALL);
              ResultSet resultSet = statement.executeQuery()) {
             result = processResultSet(resultSet);
         } catch (SQLException e) {
-            e.printStackTrace();
+            log.throwing("JdbcStudentDao", "getAllStudents", e);
+            throw new DAOException("Cannot run getAllStudents method", e);
         }
         return result;
     }
 
     @Override
-    public void insertStudents(List<Student> students) {
-        try (Connection connection = connectionProvider.getConnection();
+    public void insertStudents(List<Student> students) throws DAOException {
+        if (students == null)
+            throw new IllegalArgumentException("Null in not allowed");
+        try (Connection connection = dataSource.getConnection();
              PreparedStatement statement = connection.prepareStatement(INSERT)) {
             for (Student student : students) {
                 statement.setInt(1, student.getGroupId());
@@ -60,52 +66,63 @@ public class JdbcStudentDao implements StudentDao {
             }
             statement.executeBatch();
         } catch (SQLException e) {
-            e.printStackTrace();
+            log.throwing("JdbcStudentDao", "insertStudents", e);
+            throw new DAOException("Error in insertStudents", e);
+
         }
     }
 
     @Override
-    public void insertStudent(Student student) {
-        try (Connection connection = connectionProvider.getConnection();
+    public void insertStudent(Student student) throws DAOException {
+        if (student == null)
+            throw new IllegalArgumentException("Null is not allowed");
+        try (Connection connection = dataSource.getConnection();
              PreparedStatement statement = connection.prepareStatement(INSERT)) {
-            statement.setInt(1,student.getGroupId());
+            statement.setInt(1, student.getGroupId());
             statement.setString(2, student.getFirstName());
             statement.setString(3, student.getLastName());
             statement.executeUpdate();
         } catch (SQLException e) {
-            e.printStackTrace();
+            log.throwing("JdbcStudentDao", "insertStudent", e);
+            throw new DAOException("Error in insertStudent", e);
         }
     }
 
     @Override
-    public void deleteStudentById(int studentId) {
-        try (Connection connection = connectionProvider.getConnection();
+    public void deleteStudentById(int studentId) throws DAOException {
+        try (Connection connection = dataSource.getConnection();
              PreparedStatement statement = connection.prepareStatement(DELETE)) {
             statement.setInt(1, studentId);
             statement.executeUpdate();
         } catch (SQLException e) {
-            System.out.println(e.getMessage());
+            log.throwing("JdbcStudentDao", "deleteStudentById", e);
+            throw new DAOException("Error in deleteStudentById", e);
         }
     }
 
     @Override
-    public List<Student> getStudentsByCourseName(String courseName) {
+    public List<Student> getStudentsByCourseName(String courseName) throws DAOException {
+        if (courseName == null)
+            throw new IllegalArgumentException("Null is now allowed");
         List<Student> result = new ArrayList<>();
-        try (Connection connection = connectionProvider.getConnection();
+        try (Connection connection = dataSource.getConnection();
              PreparedStatement statement = connection.prepareStatement(GET_BY_COURSE_NAME)) {
             statement.setString(1, courseName);
             try (ResultSet resultSet = statement.executeQuery()) {
                 result = processResultSet(resultSet);
             }
         } catch (SQLException e) {
-            e.printStackTrace();
+            log.throwing("JdbcStudentDao", "getStudentsByCourseName", e);
+            throw new DAOException("Error in getStudentsByCourseName", e);
         }
         return result;
     }
 
     @Override
-    public void assignToCourses(Map<Student, List<Course>> map) {
-        try (Connection connection = connectionProvider.getConnection();
+    public void assignToCourses(Map<Student, List<Course>> map) throws DAOException {
+        if (map == null)
+            throw new IllegalArgumentException("Null is not allowed");
+        try (Connection connection = dataSource.getConnection();
              PreparedStatement statement = connection.prepareStatement(ASSIGN_TO_COURSE)) {
             for (Map.Entry<Student, List<Course>> entry : map.entrySet()) {
                 Student student = entry.getKey();
@@ -117,31 +134,34 @@ public class JdbcStudentDao implements StudentDao {
             }
             statement.executeBatch();
         } catch (SQLException e) {
-            e.printStackTrace();
+            log.throwing("JdbcStudentDao", "assignToCourses", e);
+            throw new DAOException("Error in assignToCourses", e);
         }
     }
 
     @Override
-    public void assignToCourse(int studentId, int courseId) {
-        try (Connection connection = connectionProvider.getConnection();
+    public void assignToCourse(int studentId, int courseId) throws DAOException {
+        try (Connection connection = dataSource.getConnection();
              PreparedStatement statement = connection.prepareStatement(ASSIGN_TO_COURSE)) {
             statement.setInt(1, studentId);
             statement.setInt(2, courseId);
             statement.executeUpdate();
         } catch (SQLException e) {
-            e.printStackTrace();
+            log.throwing("JdbcStudentDao", "assignToCourse", e);
+            throw new DAOException("Error in assignToCourse", e);
         }
     }
 
     @Override
-    public void deleteFromCourse(int studentId, int courseId) {
-        try (Connection connection = connectionProvider.getConnection();
+    public void deleteFromCourse(int studentId, int courseId) throws DAOException {
+        try (Connection connection = dataSource.getConnection();
              PreparedStatement statement = connection.prepareStatement(DELETE_FROM_COURSE)) {
             statement.setInt(1, studentId);
             statement.setInt(2, courseId);
             statement.executeUpdate();
         } catch (SQLException e) {
-            e.printStackTrace();
+            log.throwing("JdbcStudentDao", "deleteFromCourse", e);
+            throw new DAOException("Error in deleteFromCourse", e);
         }
     }
 

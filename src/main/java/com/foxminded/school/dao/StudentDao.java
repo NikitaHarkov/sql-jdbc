@@ -7,19 +7,19 @@ import java.util.List;
 import java.util.Map;
 
 public interface StudentDao {
-    List<Student> getAllStudents();
+    List<Student> getAllStudents() throws DAOException;
 
-    void insertStudents(List<Student> students);
+    void insertStudents(List<Student> students) throws DAOException;
 
-    void insertStudent(Student student);
+    void insertStudent(Student student) throws DAOException;
 
-    void deleteStudentById(int studentId);
+    void deleteStudentById(int studentId) throws DAOException;
 
-    List<Student> getStudentsByCourseName(String courseName);
+    List<Student> getStudentsByCourseName(String courseName) throws DAOException;
 
-    void assignToCourses(Map<Student, List<Course>> map);
+    void assignToCourses(Map<Student, List<Course>> map) throws DAOException;
 
-    void assignToCourse(int studentId, int courseId);
+    void assignToCourse(int studentId, int courseId) throws DAOException;
 
-    void deleteFromCourse(int studentId, int courseId);
+    void deleteFromCourse(int studentId, int courseId) throws DAOException;
 }

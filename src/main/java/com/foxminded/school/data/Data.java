@@ -1,4 +1,4 @@
-package com.foxminded.school.service;
+package com.foxminded.school.data;
 
 import com.foxminded.school.domain.Course;
 import com.foxminded.school.domain.Group;
@@ -7,7 +7,7 @@ import com.foxminded.school.domain.Student;
 import java.util.*;
 import java.util.stream.Collectors;
 
-public class TestData {
+public class Data {
     private final Random random = new Random();
     private final String[] firstNames = {"James", "John", "Mike", "Jeremy", "Ivan",
             "Ron", "Anthony", "Jack", "Harry", "Jacob",

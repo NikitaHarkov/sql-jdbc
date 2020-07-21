@@ -1,53 +1,46 @@
 package com.foxminded.school;
 
-import com.foxminded.school.dao.ConnectionProvider;
-import com.foxminded.school.service.TestData;
-import com.foxminded.school.service.TestDataGenerator;
-import com.foxminded.school.service.UserInterface;
+import com.foxminded.school.dao.DataSource;
+import com.foxminded.school.data.Data;
+import com.foxminded.school.data.DataGenerator;
+import com.foxminded.school.service.*;
+import com.foxminded.school.ui.UserInterface;
 import org.apache.ibatis.jdbc.ScriptRunner;
 
 import java.io.BufferedReader;
-import java.io.FileNotFoundException;
 import java.io.FileReader;
-import java.net.URL;
+import java.io.IOException;
 import java.sql.Connection;
-import java.sql.DriverManager;
 import java.sql.SQLException;
+import java.util.logging.Logger;
 
 
 public class SqlApplication {
-    private final static String dbUrl = "jdbc:postgresql://localhost/school";
+    private static final Logger log = Logger.getLogger(SqlApplication.class.getName());
 
     public static void main(String[] args) {
         try {
-            String createTablesScript = getFilePath("create_tables.sql");
+            DataSource dataSource = PropertyParser.getConnection("connection.properties");
+            String createTablesScript = PathReader.getFilePath("create_tables.sql");
             try {
-                Connection connection = DriverManager.getConnection(dbUrl, "director", "school");
+                Class.forName("org.postgresql.Driver");
+                Connection connection = dataSource.getConnection();
                 System.out.println("Connection established......");
                 ScriptRunner scriptRunner = new ScriptRunner(connection);
                 scriptRunner.runScript(new BufferedReader(new FileReader(createTablesScript)));
 
-                TestData testData = new TestData();
-                ConnectionProvider connectionProvider = new ConnectionProvider(dbUrl, "director", "school");
-                TestDataGenerator.generateTestData(testData, connectionProvider);
+                Data data = new Data();
+                DataGenerator.generateTestData(data, dataSource);
 
-                UserInterface userInterface = new UserInterface(connectionProvider);
+                UserInterface userInterface = new UserInterface(dataSource);
                 userInterface.runInterface();
-            } catch (SQLException ex) {
-                System.out.println("Connection failed \n" + ex);
+            } catch (SQLException | ClassNotFoundException ex) {
+                log.throwing("SqlApplication", "main", ex);
+                System.out.println("Connection failed..." + ex);
             }
-        } catch (FileNotFoundException ex) {
-            System.out.println("There is no such file\n" + ex);
+        } catch (IOException ex) {
+            log.throwing("SqlApplication", "main", ex);
+            System.out.println("File not found!" + ex);
         }
-
-    }
-
-    private static String getFilePath(String file) throws FileNotFoundException {
-        ClassLoader classLoader = Thread.currentThread().getContextClassLoader();
-        URL url = classLoader.getResource(file);
-        if (url == null) {
-            throw new FileNotFoundException("File not found!");
-        }
-        return url.getPath();
     }
 }

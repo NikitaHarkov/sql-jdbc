@@ -1,9 +1,6 @@
-package com.foxminded.school.service;
+package com.foxminded.school.ui;
 
-import com.foxminded.school.dao.ConnectionProvider;
-import com.foxminded.school.dao.CourseDao;
-import com.foxminded.school.dao.GroupDao;
-import com.foxminded.school.dao.StudentDao;
+import com.foxminded.school.dao.*;
 import com.foxminded.school.dao.jdbc.JdbcCourseDao;
 import com.foxminded.school.dao.jdbc.JdbcGroupDao;
 import com.foxminded.school.dao.jdbc.JdbcStudentDao;
@@ -14,18 +11,20 @@ import com.foxminded.school.domain.Student;
 import java.util.List;
 import java.util.Random;
 import java.util.Scanner;
+import java.util.logging.Logger;
 
 public class UserInterface {
+    private final Logger log = Logger.getLogger(UserInterface.class.getName());
     private final Scanner scanner;
     private final CourseDao courseDao;
     private final GroupDao groupDao;
     private final StudentDao studentDao;
 
-    public UserInterface(ConnectionProvider connectionProvider) {
+    public UserInterface(DataSource dataSource) {
         scanner = new Scanner(System.in);
-        courseDao = new JdbcCourseDao(connectionProvider);
-        groupDao = new JdbcGroupDao(connectionProvider);
-        studentDao = new JdbcStudentDao(connectionProvider);
+        courseDao = new JdbcCourseDao(dataSource);
+        groupDao = new JdbcGroupDao(dataSource);
+        studentDao = new JdbcStudentDao(dataSource);
     }
 
     public void runInterface() {
@@ -78,20 +77,27 @@ public class UserInterface {
         System.out.println("Find groups by max. students count: ");
         System.out.println("Enter students count >>> ");
         int studentsCount = getNumber();
-        List<Group> groups = groupDao.getGroupsByStudentsCount(studentsCount);
-        printGroups(groups);
+        try {
+            List<Group> groups = groupDao.getGroupsByStudentsCount(studentsCount);
+            printGroups(groups);
+        } catch (DAOException ex) {
+            log.throwing("UserInterface", "findGroups", ex);
+        }
+
     }
 
     private void findStudentsByCourseName() {
         System.out.println("Find students by course name: ");
         System.out.print("Enter course name >>> ");
         String courseName = scanner.next();
-
-        List<Student> students = studentDao.getStudentsByCourseName(courseName);
-
-        System.out.println("Students from course \"" + courseName + "\":");
-        System.out.println();
-        printStudents(students);
+        try {
+            List<Student> students = studentDao.getStudentsByCourseName(courseName);
+            System.out.println("Students from course \"" + courseName + "\":");
+            System.out.println();
+            printStudents(students);
+        } catch (DAOException ex) {
+            log.throwing("UserInterface", "findStudentsByCourseName", ex);
+        }
     }
 
     private void addNewStudent() {
@@ -103,62 +109,80 @@ public class UserInterface {
         String lastName = scanner.next();
 
         Student newStudent = new Student();
-        newStudent.setGroupId(new Random().nextInt(10)+1);
+        newStudent.setGroupId(new Random().nextInt(10) + 1);
         newStudent.setFirstName(firstName);
         newStudent.setLastName(lastName);
+        try {
+            studentDao.insertStudent(newStudent);
+        } catch (DAOException ex) {
+            log.throwing("UserInterface", "addNewStudent", ex);
+        }
 
-        studentDao.insertStudent(newStudent);
         System.out.println("Student " + newStudent.getFirstName() + " " + newStudent.getLastName() + " inserted");
     }
 
     private void deleteStudentById() {
         System.out.println("Delete student by ID: ");
         int studentId = getNumber();
-        studentDao.deleteStudentById(studentId);
+        try {
+            studentDao.deleteStudentById(studentId);
+        } catch (DAOException ex) {
+            log.throwing("UserInterface", "deleteStudentById", ex);
+        }
+
         System.out.println("Student not deleted");
     }
 
     private void addStudentToCourse() {
         System.out.println("Add student to course: ");
         System.out.println("List of students: ");
-        printStudents(studentDao.getAllStudents());
+        try {
+            printStudents(studentDao.getAllStudents());
 
-        System.out.println("Enter student id >>> ");
-        int studentId = getNumber();
+            System.out.println("Enter student id >>> ");
+            int studentId = getNumber();
 
-        System.out.println("List of courses: ");
-        printCourses(courseDao.getAllCourses());
+            System.out.println("List of courses: ");
+            printCourses(courseDao.getAllCourses());
 
-        System.out.println("Enter course id >>> ");
-        int courseId = getNumber();
+            System.out.println("Enter course id >>> ");
+            int courseId = getNumber();
 
-        if (studentId > 0 && courseId > 0) {
-            studentDao.assignToCourse(studentId, courseId);
-            System.out.println("Course added");
-        } else {
-            System.out.println("Error, wrong IDs entered");
+            if (studentId > 0 && courseId > 0) {
+                studentDao.assignToCourse(studentId, courseId);
+                System.out.println("Course added");
+            } else {
+                System.out.println("Error, wrong IDs entered");
+            }
+        } catch (DAOException ex) {
+            log.throwing("UserInterface", "addStudentToCourse", ex);
         }
+
     }
 
     private void removeStudentCourse() {
         System.out.println("Remove student course: ");
         System.out.println("List of students: ");
-        printStudents(studentDao.getAllStudents());
+        try {
+            printStudents(studentDao.getAllStudents());
 
-        System.out.println("Enter student id >>> ");
-        int studentId = getNumber();
+            System.out.println("Enter student id >>> ");
+            int studentId = getNumber();
 
-        System.out.println("List of student courses: ");
-        printCourses(courseDao.getByStudentId(studentId));
+            System.out.println("List of student courses: ");
+            printCourses(courseDao.getByStudentId(studentId));
 
-        System.out.println("Enter course id >>> ");
-        int courseId = getNumber();
+            System.out.println("Enter course id >>> ");
+            int courseId = getNumber();
 
-        if (studentId > 0 && courseId > 0) {
-            studentDao.deleteFromCourse(studentId, courseId);
-            System.out.println("Relation student-course deleted");
-        } else {
-            System.out.println("Error, wrong IDs entered");
+            if (studentId > 0 && courseId > 0) {
+                studentDao.deleteFromCourse(studentId, courseId);
+                System.out.println("Relation student-course deleted");
+            } else {
+                System.out.println("Error, wrong IDs entered");
+            }
+        } catch (DAOException ex) {
+            log.throwing("UserInterface", "removeStudentCourse", ex);
         }
 
     }

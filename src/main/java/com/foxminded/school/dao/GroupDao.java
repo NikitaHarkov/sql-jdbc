@@ -5,7 +5,9 @@ import com.foxminded.school.domain.Group;
 import java.util.List;
 
 public interface GroupDao {
-    void insertGroups(List<Group> groups);
+    void insertGroups(List<Group> groups) throws DAOException;
 
-    List<Group> getGroupsByStudentsCount(int count);
+    List<Group> getGroups() throws DAOException;
+
+    List<Group> getGroupsByStudentsCount(int count) throws DAOException;
 }

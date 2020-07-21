@@ -1,7 +1,8 @@
 package com.foxminded.school.dao.jdbc;
 
-import com.foxminded.school.dao.ConnectionProvider;
 import com.foxminded.school.dao.CourseDao;
+import com.foxminded.school.dao.DAOException;
+import com.foxminded.school.dao.DataSource;
 import com.foxminded.school.domain.Course;
 
 import java.sql.Connection;
@@ -10,9 +11,12 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.logging.Logger;
+
 
 public class JdbcCourseDao implements CourseDao {
-    private static final String INSERT = "INSERT INTO courses (course_id, course_name, course_description) VALUES (?, ?, ?)";
+    private static final Logger log = Logger.getLogger(JdbcGroupDao.class.getName());
+    private static final String INSERT = "INSERT INTO courses (course_name, course_description) VALUES (?, ?)";
     private static final String GET_ALL = "SELECT * FROM courses";
     private static final String GET_BY_STUDENT_ID =
             "SELECT courses.course_id, courses.course_name, courses.course_description " +
@@ -21,52 +25,56 @@ public class JdbcCourseDao implements CourseDao {
                     "ON students_courses.course_id = courses.course_id " +
                     "WHERE students_courses.student_id = ?";
 
-    private final ConnectionProvider connectionProvider;
+    private final DataSource dataSource;
 
-    public JdbcCourseDao(ConnectionProvider connectionProvider) {
-        this.connectionProvider = connectionProvider;
+    public JdbcCourseDao(DataSource dataSource) {
+        this.dataSource = dataSource;
     }
 
     @Override
-    public void insertCourses(List<Course> courses) {
-        try (Connection connection = connectionProvider.getConnection();
-             PreparedStatement preparedStatement = connection.prepareStatement(INSERT)) {
+    public void insertCourses(List<Course> courses) throws DAOException {
+        if (courses == null)
+            throw new IllegalArgumentException("Null is not allowed");
+        try (Connection connection = dataSource.getConnection();
+             PreparedStatement statement = connection.prepareStatement(INSERT)) {
             for (Course course : courses) {
-                preparedStatement.setInt(1, course.getId());
-                preparedStatement.setString(2, course.getName());
-                preparedStatement.setString(3, course.getDescription());
-                preparedStatement.addBatch();
+                statement.setString(1, course.getName());
+                statement.setString(2, course.getDescription());
+                statement.addBatch();
             }
-            preparedStatement.executeBatch();
+            statement.executeBatch();
         } catch (SQLException e) {
-            e.printStackTrace();
+            log.throwing("JdbcCourseDao", "insertCourses:", e);
+            throw new DAOException("Error in insertCourses", e);
         }
     }
 
     @Override
-    public List<Course> getAllCourses() {
-        List<Course> result = new ArrayList<>();
-        try (Connection connection = connectionProvider.getConnection();
-             PreparedStatement preparedStatement = connection.prepareStatement(GET_ALL);
-             ResultSet resultSet = preparedStatement.executeQuery()) {
+    public List<Course> getAllCourses() throws DAOException {
+        List<Course> result;
+        try (Connection connection = dataSource.getConnection();
+             PreparedStatement statement = connection.prepareStatement(GET_ALL);
+             ResultSet resultSet = statement.executeQuery()) {
             result = processResultSet(resultSet);
         } catch (SQLException e) {
-            e.printStackTrace();
+            log.throwing("JdbcCourseDao", "getAllCourses:", e);
+            throw new DAOException("Error in getAllCourses", e);
         }
         return result;
     }
 
     @Override
-    public List<Course> getByStudentId(int studentId) {
-        List<Course> result = new ArrayList<>();
-        try (Connection connection = connectionProvider.getConnection();
-             PreparedStatement preparedStatement = connection.prepareStatement(GET_BY_STUDENT_ID)) {
-            preparedStatement.setInt(1, studentId);
-            try (ResultSet resultSet = preparedStatement.executeQuery()) {
+    public List<Course> getByStudentId(int studentId) throws DAOException {
+        List<Course> result;
+        try (Connection connection = dataSource.getConnection();
+             PreparedStatement statement = connection.prepareStatement(GET_BY_STUDENT_ID)) {
+            statement.setInt(1, studentId);
+            try (ResultSet resultSet = statement.executeQuery()) {
                 result = processResultSet(resultSet);
             }
         } catch (SQLException e) {
-            e.printStackTrace();
+            log.throwing("JdbcCourseDao", "getByStudentId:", e);
+            throw new DAOException("Error in getByStudentId", e);
         }
         return result;
     }
