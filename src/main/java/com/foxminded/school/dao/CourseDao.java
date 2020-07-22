@@ -1,6 +1,7 @@
 package com.foxminded.school.dao;
 
 import com.foxminded.school.domain.Course;
+import com.foxminded.school.exception.DAOException;
 
 import java.util.List;
 

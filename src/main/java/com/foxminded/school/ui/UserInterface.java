@@ -1,12 +1,13 @@
 package com.foxminded.school.ui;
 
 import com.foxminded.school.dao.*;
-import com.foxminded.school.dao.jdbc.JdbcCourseDao;
-import com.foxminded.school.dao.jdbc.JdbcGroupDao;
-import com.foxminded.school.dao.jdbc.JdbcStudentDao;
+import com.foxminded.school.dao.impl.CourseDaoImpl;
+import com.foxminded.school.dao.impl.GroupDaoImpl;
+import com.foxminded.school.dao.impl.StudentDaoImpl;
 import com.foxminded.school.domain.Course;
 import com.foxminded.school.domain.Group;
 import com.foxminded.school.domain.Student;
+import com.foxminded.school.exception.DAOException;
 
 import java.util.List;
 import java.util.Random;
@@ -22,9 +23,9 @@ public class UserInterface {
 
     public UserInterface(DataSource dataSource) {
         scanner = new Scanner(System.in);
-        courseDao = new JdbcCourseDao(dataSource);
-        groupDao = new JdbcGroupDao(dataSource);
-        studentDao = new JdbcStudentDao(dataSource);
+        courseDao = new CourseDaoImpl(dataSource);
+        groupDao = new GroupDaoImpl(dataSource);
+        studentDao = new StudentDaoImpl(dataSource);
     }
 
     public void runInterface() {
@@ -32,29 +33,22 @@ public class UserInterface {
         while (!exit) {
             printMainMenu();
             System.out.println("Enter a letter from '1' to '6' to make queries or 'q' to exit!");
-            switch (scanner.next()) {
-                case "1":
-                    findGroups();
-                    break;
-                case "2":
-                    findStudentsByCourseName();
-                    break;
-                case "3":
-                    addNewStudent();
-                    break;
-                case "4":
-                    deleteStudentById();
-                    break;
-                case "5":
-                    addStudentToCourse();
-                    break;
-                case "6":
-                    removeStudentCourse();
-                    break;
-                case "q":
-                    System.out.println("Exiting....");
-                    exit = true;
-                    break;
+            String input = scanner.next();
+            if (input.equals("1"))
+                findGroups();
+            else if (input.equals("2"))
+                findStudentsByCourseName();
+            else if (input.equals("3"))
+                addNewStudent();
+            else if (input.equals("4"))
+                deleteStudentById();
+            else if (input.equals("5"))
+                addStudentToCourse();
+            else if (input.equals("6"))
+                removeStudentCourse();
+            else if (input.equals("q")) {
+                System.out.println("Exiting...");
+                exit = true;
             }
         }
         scanner.close();
@@ -82,6 +76,7 @@ public class UserInterface {
             printGroups(groups);
         } catch (DAOException ex) {
             log.throwing("UserInterface", "findGroups", ex);
+            System.out.println("Cannot find groups\n" + ex.getMessage());
         }
 
     }
@@ -97,6 +92,7 @@ public class UserInterface {
             printStudents(students);
         } catch (DAOException ex) {
             log.throwing("UserInterface", "findStudentsByCourseName", ex);
+            System.out.println("Cannot find students\n" + ex.getMessage());
         }
     }
 
@@ -116,6 +112,7 @@ public class UserInterface {
             studentDao.insertStudent(newStudent);
         } catch (DAOException ex) {
             log.throwing("UserInterface", "addNewStudent", ex);
+            System.out.println("Cannot add student\n" + ex.getMessage());
         }
 
         System.out.println("Student " + newStudent.getFirstName() + " " + newStudent.getLastName() + " inserted");
@@ -128,9 +125,10 @@ public class UserInterface {
             studentDao.deleteStudentById(studentId);
         } catch (DAOException ex) {
             log.throwing("UserInterface", "deleteStudentById", ex);
+            System.out.println("Cannot delete student by ID\n" + ex.getMessage());
         }
 
-        System.out.println("Student not deleted");
+        System.out.println("Student has been deleted");
     }
 
     private void addStudentToCourse() {
@@ -156,6 +154,7 @@ public class UserInterface {
             }
         } catch (DAOException ex) {
             log.throwing("UserInterface", "addStudentToCourse", ex);
+            System.out.println("Cannot add student to course\n" + ex.getMessage());
         }
 
     }
@@ -183,6 +182,7 @@ public class UserInterface {
             }
         } catch (DAOException ex) {
             log.throwing("UserInterface", "removeStudentCourse", ex);
+            System.out.println("Cannot remove student from course\n" + ex.getMessage());
         }
 
     }

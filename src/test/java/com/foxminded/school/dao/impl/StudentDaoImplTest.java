@@ -1,7 +1,7 @@
-package com.foxminded.school.dao.jdbc;
+package com.foxminded.school.dao.impl;
 
 import com.foxminded.school.dao.CourseDao;
-import com.foxminded.school.dao.DAOException;
+import com.foxminded.school.exception.DAOException;
 import com.foxminded.school.dao.DataSource;
 import com.foxminded.school.dao.StudentDao;
 import com.foxminded.school.domain.Course;
@@ -15,24 +15,23 @@ import org.junit.jupiter.api.Test;
 import java.io.BufferedReader;
 import java.io.FileReader;
 import java.io.IOException;
-import java.sql.Array;
 import java.sql.Connection;
 import java.sql.SQLException;
 import java.util.*;
 
 import static org.junit.jupiter.api.Assertions.*;
 
-class JdbcStudentDaoTest {
+class StudentDaoImplTest {
     DataSource dataSource;
     CourseDao courseDao;
     StudentDao studentDao;
 
     @BeforeEach
-    void setConnection() throws IOException {
-        dataSource = PropertyParser.getConnection("test_connection.properties");
+    void setConnection() throws IOException, ClassNotFoundException {
+        dataSource = PropertyParser.getConnectionProperties("test_connection.properties");
         String script = PathReader.getFilePath("create_test_tables.sql");
-        courseDao = new JdbcCourseDao(dataSource);
-        studentDao = new JdbcStudentDao(dataSource);
+        courseDao = new CourseDaoImpl(dataSource);
+        studentDao = new StudentDaoImpl(dataSource);
         try {
             Class.forName("org.postgresql.Driver");
             Connection connection = dataSource.getConnection();

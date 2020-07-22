@@ -1,6 +1,6 @@
-package com.foxminded.school.dao.jdbc;
+package com.foxminded.school.dao.impl;
 
-import com.foxminded.school.dao.DAOException;
+import com.foxminded.school.exception.DAOException;
 import com.foxminded.school.dao.DataSource;
 import com.foxminded.school.dao.StudentDao;
 import com.foxminded.school.domain.Course;
@@ -15,41 +15,45 @@ import java.util.List;
 import java.util.Map;
 import java.util.logging.Logger;
 
-public class JdbcStudentDao implements StudentDao {
-    private static final Logger log = Logger.getLogger(JdbcStudentDao.class.getName());
+public class StudentDaoImpl implements StudentDao {
+    private static final Logger log = Logger.getLogger(StudentDaoImpl.class.getName());
     private static final String GET_ALL = "SELECT * FROM students";
-    private static final String INSERT = "INSERT INTO students (group_id, first_name, last_name) VALUES (?, ?, ?)";
+    private static final String INSERT_STUDENTS_QUERY =
+            "INSERT INTO students (group_id, first_name, last_name) " +
+            "     VALUES (?, ?, ?)";
     private static final String DELETE = "DELETE FROM students WHERE student_id = ?";
     private static final String GET_BY_COURSE_NAME =
             "SELECT students.student_id, students.group_id, students.first_name, students.last_name " +
-                    "FROM students_courses " +
-                    "INNER  JOIN students " +
-                    "ON students_courses.student_id = students.student_id " +
-                    "INNER  JOIN courses " +
-                    "ON students_courses.course_id = courses.course_id " +
-                    "WHERE courses.course_name = ?";
+            "  FROM students_courses " +
+            "       INNER JOIN students " +
+            "       ON students_courses.student_id = students.student_id " +
+
+            "       INNER  JOIN courses " +
+            "       ON students_courses.course_id = courses.course_id " +
+            " WHERE courses.course_name = ?";
     private static final String ASSIGN_TO_COURSE = "INSERT INTO students_courses (student_id, course_id) VALUES (?, ?)";
     private static final String DELETE_FROM_COURSE =
-            "DELETE FROM students_courses WHERE student_id = ? AND course_id = ?";
+            "DELETE " +
+            "  FROM students_courses " +
+            " WHERE student_id = ? " +
+            "   AND course_id = ?";
 
     private final DataSource dataSource;
 
-    public JdbcStudentDao(DataSource dataSource) {
+    public StudentDaoImpl(DataSource dataSource) {
         this.dataSource = dataSource;
     }
 
     @Override
     public List<Student> getAllStudents() throws DAOException {
-        List<Student> result;
         try (Connection connection = dataSource.getConnection();
              PreparedStatement statement = connection.prepareStatement(GET_ALL);
              ResultSet resultSet = statement.executeQuery()) {
-            result = processResultSet(resultSet);
+            return processResultSet(resultSet);
         } catch (SQLException e) {
             log.throwing("JdbcStudentDao", "getAllStudents", e);
             throw new DAOException("Cannot run getAllStudents method", e);
         }
-        return result;
     }
 
     @Override
@@ -57,7 +61,7 @@ public class JdbcStudentDao implements StudentDao {
         if (students == null)
             throw new IllegalArgumentException("Null in not allowed");
         try (Connection connection = dataSource.getConnection();
-             PreparedStatement statement = connection.prepareStatement(INSERT)) {
+             PreparedStatement statement = connection.prepareStatement(INSERT_STUDENTS_QUERY)) {
             for (Student student : students) {
                 statement.setInt(1, student.getGroupId());
                 statement.setString(2, student.getFirstName());
@@ -77,7 +81,7 @@ public class JdbcStudentDao implements StudentDao {
         if (student == null)
             throw new IllegalArgumentException("Null is not allowed");
         try (Connection connection = dataSource.getConnection();
-             PreparedStatement statement = connection.prepareStatement(INSERT)) {
+             PreparedStatement statement = connection.prepareStatement(INSERT_STUDENTS_QUERY)) {
             statement.setInt(1, student.getGroupId());
             statement.setString(2, student.getFirstName());
             statement.setString(3, student.getLastName());
@@ -104,18 +108,16 @@ public class JdbcStudentDao implements StudentDao {
     public List<Student> getStudentsByCourseName(String courseName) throws DAOException {
         if (courseName == null)
             throw new IllegalArgumentException("Null is now allowed");
-        List<Student> result = new ArrayList<>();
         try (Connection connection = dataSource.getConnection();
              PreparedStatement statement = connection.prepareStatement(GET_BY_COURSE_NAME)) {
             statement.setString(1, courseName);
             try (ResultSet resultSet = statement.executeQuery()) {
-                result = processResultSet(resultSet);
+                return processResultSet(resultSet);
             }
         } catch (SQLException e) {
             log.throwing("JdbcStudentDao", "getStudentsByCourseName", e);
             throw new DAOException("Error in getStudentsByCourseName", e);
         }
-        return result;
     }
 
     @Override

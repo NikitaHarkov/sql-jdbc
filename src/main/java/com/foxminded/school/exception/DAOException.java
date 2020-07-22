@@ -1,4 +1,4 @@
-package com.foxminded.school.dao;
+package com.foxminded.school.exception;
 
 import java.sql.SQLException;
 

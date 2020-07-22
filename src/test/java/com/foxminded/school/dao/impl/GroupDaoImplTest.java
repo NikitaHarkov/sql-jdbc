@@ -1,6 +1,6 @@
-package com.foxminded.school.dao.jdbc;
+package com.foxminded.school.dao.impl;
 
-import com.foxminded.school.dao.DAOException;
+import com.foxminded.school.exception.DAOException;
 import com.foxminded.school.dao.DataSource;
 import com.foxminded.school.dao.GroupDao;
 import com.foxminded.school.dao.StudentDao;
@@ -23,17 +23,17 @@ import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.*;
 
-class JdbcGroupDaoTest {
+class GroupDaoImplTest {
     DataSource dataSource;
     GroupDao groupDao;
     StudentDao studentDao;
 
     @BeforeEach
-    void setConnection() throws IOException {
-        dataSource = PropertyParser.getConnection("test_connection.properties");
+    void setConnection() throws IOException, ClassNotFoundException {
+        dataSource = PropertyParser.getConnectionProperties("test_connection.properties");
         String script = PathReader.getFilePath("create_test_tables.sql");
-        groupDao = new JdbcGroupDao(dataSource);
-        studentDao = new JdbcStudentDao(dataSource);
+        groupDao = new GroupDaoImpl(dataSource);
+        studentDao = new StudentDaoImpl(dataSource);
         try {
             Class.forName("org.postgresql.Driver");
             Connection connection = dataSource.getConnection();

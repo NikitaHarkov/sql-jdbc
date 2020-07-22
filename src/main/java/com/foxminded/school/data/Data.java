@@ -8,18 +8,15 @@ import java.util.*;
 import java.util.stream.Collectors;
 
 public class Data {
+    private static final int FROM_UPPER_LETTER_A = 65;
+    private static final int TO_UPPER_LETTER_Z = 90;
+    private static final int STREAM_SIZE = 2;
+    private static final int STUDENTS_AMOUNT = 200;
     private final Random random = new Random();
-    private final String[] firstNames = {"James", "John", "Mike", "Jeremy", "Ivan",
-            "Ron", "Anthony", "Jack", "Harry", "Jacob",
-            "Kyle", "William", "David", "Richard", "Joseph",
-            "Thomas", "Alexander", "Daniel", "Oscar", "Charlie"};
-
-    final String[] lastNames = {"Ainsley", "Appleton", "Clare", "Clifford", "Benson",
-            "Bentley", "Deighton", "Darlington", "Digby", "Kimberley",
-            "Kirby", "Langley", "Elton", "Everleigh", "Garrick",
-            "Milton", "Brixton", "Hallewell", "Oakes", "Perry"};
-    final int[] studentsInGroup = {0, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20,
-            21, 22, 23, 24, 25, 26, 27, 28, 29, 30};
+    private final String[] firstNames;
+    private final String[] lastNames;
+    private final int[] studentsInGroup;
+    private final List<Course> courses;
 
     public List<Group> getGroups() {
         List<Group> list = new ArrayList<>();
@@ -27,7 +24,7 @@ public class Data {
             Group group = new Group();
             group.setId(i + 1);
             StringBuilder course = new StringBuilder();
-            String letters = random.ints(2, 65, 90)
+            String letters = random.ints(STREAM_SIZE, FROM_UPPER_LETTER_A, TO_UPPER_LETTER_Z)
                     .mapToObj(upperLetter -> String.valueOf((char) upperLetter))
                     .collect(Collectors.joining());
             String numbers = random.ints(2, 0, 9)
@@ -40,20 +37,7 @@ public class Data {
     }
 
     public List<Course> getCourses() {
-        return Arrays.asList(
-                new Course(1, "Archaeology", "Archaeology is the study of human and prehistorconducted through the act of excavation and analysis."),
-                new Course(2, "Architecture", "Buildings and other physical structures, but athe art and science of designing buildings, and the design aethod of construction."),
-                new Course(3, "Chemistry", "Chemistry is one of three central branches educational science. It is a physical science that studihe composition, structure, properties and change of matter."),
-                new Course(4, "Computer Science", "How we use computers and computer programmhas utterly defined the world we live in today and its computcientists whom connect the abstract with concrete creating troducts we use every day."),
-                new Course(5, "Criminology", "Criminology is the scientific study of criminal behavi, on individual, social and natural levels, and how it can be manageontrolled and prevented."),
-                new Course(6, "Economics", "Social science of which factors determine the production adistribution goods and services in a consumer, capitalist society."),
-                new Course(7, "History", "Historians use evidence to try to understand why people believwhat they believed and why they did what they did."),
-                new Course(8, "Mathematics", "There are three main areas of study under the umbrella Mathematics – mathematics itself, statistics, and operational research"),
-                new Course(9, "Robotics", "Robotics is a branch of mechanical engineering, electricengineering, electronic engineering and computer science."),
-                new Course(10, "Sociology", "Sociology is the scientific study of behaviour by people in" +
-                        " the society in which they live, how it came about, is organised and " +
-                        "developed, and what it may become in the future.")
-        );
+        return courses;
     }
 
     public List<Student> getStudents(List<Group> groups) {
@@ -63,7 +47,7 @@ public class Data {
 
     private List<Student> getStudentsWithNames() {
         List<Student> list = new ArrayList<>();
-        for (int i = 0; i < 200; i++) {
+        for (int i = 0; i < STUDENTS_AMOUNT; i++) {
             Student student = new Student();
             student.setId(i + 1);
             student.setFirstName(getRandomFirstName());
@@ -138,5 +122,102 @@ public class Data {
 
     private int getRandomCourseIndex(List<Course> courses) {
         return random.nextInt(courses.size());
+    }
+
+    public Data() {
+        this.firstNames = new String[]{
+                "James",
+                "John",
+                "Mike",
+                "Jeremy",
+                "Ivan",
+                "Ron",
+                "Anthony",
+                "Jack",
+                "Harry",
+                "Jacob",
+                "Kyle",
+                "William",
+                "David",
+                "Richard",
+                "Joseph",
+                "Thomas",
+                "Alexander",
+                "Daniel",
+                "Oscar",
+                "Charlie"};
+
+        this.lastNames = new String[]{
+                "Ainsley",
+                "Appleton",
+                "Clare",
+                "Clifford",
+                "Benson",
+                "Bentley",
+                "Deighton",
+                "Darlington",
+                "Digby",
+                "Kimberley",
+                "Kirby",
+                "Langley",
+                "Elton",
+                "Everleigh",
+                "Garrick",
+                "Milton",
+                "Brixton",
+                "Hallewell",
+                "Oakes",
+                "Perry"};
+
+        this.courses = Arrays.asList(
+                new Course(1,
+                        "Archaeology",
+                        "Archaeology is the study of human and prehistorconducted " +
+                                "through the act of excavation and analysis."),
+                new Course(2,
+                        "Architecture",
+                        "Buildings and other physical structures, but athe art " +
+                                "and science of designing buildings, and the design aethod of construction."),
+                new Course(3,
+                        "Chemistry",
+                        "Chemistry is one of three central branches educational " +
+                                "science. It is a physical science that studihe composition, " +
+                                "structure, properties and change of matter."),
+                new Course(4,
+                        "Computer Science",
+                        "How we use computers and computer programmhas utterly " +
+                                "defined the world we live in today and its computcientists whom " +
+                                "connect the abstract with concrete creating troducts we use every day."),
+                new Course(5,
+                        "Criminology",
+                        "Criminology is the scientific study of criminal behavi, " +
+                                "on individual, social and natural levels, and how " +
+                                "it can be manageontrolled and prevented."),
+                new Course(6,
+                        "Economics",
+                        "Social science of which factors determine the production " +
+                                "adistribution goods and services in a consumer, capitalist society."),
+                new Course(7,
+                        "History",
+                        "Historians use evidence to try to understand why people " +
+                                "believwhat they believed and why they did what they did."),
+                new Course(8,
+                        "Mathematics",
+                        "There are three main areas of study under the umbrella " +
+                                "Mathematics – mathematics itself, statistics, and operational research"),
+                new Course(9,
+                        "Robotics",
+                        "Robotics is a branch of mechanical engineering, " +
+                                "electricengineering, electronic engineering and computer science."),
+                new Course(10,
+                        "Sociology",
+                        "Sociology is the scientific study of behaviour by people in" +
+                                " the society in which they live, how it came about, is organised and " +
+                                "developed, and what it may become in the future.")
+        );
+
+        this.studentsInGroup = new int[]{
+                0, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19,
+                20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30};
     }
 }

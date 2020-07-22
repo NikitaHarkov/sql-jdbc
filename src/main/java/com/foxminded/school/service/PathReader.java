@@ -9,7 +9,7 @@ public class PathReader {
         ClassLoader classLoader = Thread.currentThread().getContextClassLoader();
         URL url = classLoader.getResource(file);
         if (url == null) {
-            throw new FileNotFoundException("File not found!");
+            throw new FileNotFoundException("File not found: '" + file + "'");
         }
         return url.getPath();
     }

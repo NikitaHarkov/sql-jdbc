@@ -1,6 +1,6 @@
-package com.foxminded.school.dao.jdbc;
+package com.foxminded.school.dao.impl;
 
-import com.foxminded.school.dao.DAOException;
+import com.foxminded.school.exception.DAOException;
 import com.foxminded.school.dao.DataSource;
 import com.foxminded.school.dao.GroupDao;
 import com.foxminded.school.domain.Group;
@@ -13,21 +13,21 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.logging.Logger;
 
-public class JdbcGroupDao implements GroupDao {
-    private static final Logger log = Logger.getLogger(JdbcGroupDao.class.getName());
-    private static final String INSERT = "INSERT INTO groups (group_name) VALUES (?)";
+public class GroupDaoImpl implements GroupDao {
+    private static final Logger log = Logger.getLogger(GroupDaoImpl.class.getName());
+    private static final String INSERT_GROUP_QUERY = "INSERT INTO groups (group_name) VALUES (?)";
     private static final String GET_ALL = "SELECT * FROM groups";
     private static final String GET_BY_STUDENTS_COUNT =
             "SELECT groups.group_id, groups.group_name, COUNT(students.student_id) " +
-                    "FROM groups " +
-                    "LEFT JOIN students " +
-                    "ON students.group_id = groups.group_id " +
-                    "GROUP BY groups.group_id " +
-                    "HAVING COUNT(*) <= ?";
+            "  FROM groups " +
+            "       LEFT JOIN students " +
+            "       ON students.group_id = groups.group_id " +
+            " GROUP BY groups.group_id " +
+            "HAVING COUNT(*) <= ?";
 
     private final DataSource dataSource;
 
-    public JdbcGroupDao(DataSource dataSource) {
+    public GroupDaoImpl(DataSource dataSource) {
         this.dataSource = dataSource;
     }
 
@@ -36,7 +36,7 @@ public class JdbcGroupDao implements GroupDao {
         if (groups == null)
             throw new IllegalArgumentException("Null is not allowed");
         try (Connection connection = dataSource.getConnection();
-             PreparedStatement statement = connection.prepareStatement(INSERT)) {
+             PreparedStatement statement = connection.prepareStatement(INSERT_GROUP_QUERY)) {
             for (Group group : groups) {
                 statement.setString(1, group.getName());
                 statement.addBatch();
@@ -50,17 +50,15 @@ public class JdbcGroupDao implements GroupDao {
 
     @Override
     public List<Group> getGroups() throws DAOException {
-        List<Group> result;
         try {
             Connection connection = dataSource.getConnection();
             PreparedStatement statement = connection.prepareStatement(GET_ALL);
             ResultSet resultSet = statement.executeQuery();
-            result = processResultSet(resultSet);
+            return processResultSet(resultSet);
         } catch (SQLException e) {
             log.throwing("JdbcGroupDao", "getGroups:", e);
             throw new DAOException("Error in getGroups", e);
         }
-        return result;
     }
 
     @Override
@@ -77,12 +75,12 @@ public class JdbcGroupDao implements GroupDao {
                     group.setStudentsCount(resultSet.getInt(3));
                     result.add(group);
                 }
+                return result;
             }
         } catch (SQLException e) {
             log.throwing("JdbcGroupDao", "getGroupsByStudentsCount:", e);
             throw new DAOException("Error in getGroupsByStudentsCount", e);
         }
-        return result;
     }
 
     private List<Group> processResultSet(ResultSet resultSet) throws SQLException {
