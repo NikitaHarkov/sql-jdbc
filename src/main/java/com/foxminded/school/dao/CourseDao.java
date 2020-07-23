@@ -6,9 +6,9 @@ import com.foxminded.school.exception.DAOException;
 import java.util.List;
 
 public interface CourseDao {
-    void insertCourses(List<Course> courses) throws DAOException;
+    void insertMany(List<Course> courses) throws DAOException;
 
-    List<Course> getAllCourses() throws DAOException;
+    List<Course> getAll() throws DAOException;
 
     List<Course> getByStudentId(int studentId) throws DAOException;
 }

@@ -16,10 +16,10 @@ import java.util.logging.Logger;
 
 public class CourseDaoImpl implements CourseDao {
     private static final Logger log = Logger.getLogger(GroupDaoImpl.class.getName());
+    private static final String GET_ALL = "SELECT * FROM courses";
     private static final String INSERT_COURSE_QUERY =
             "INSERT INTO courses (course_name, course_description) " +
             "     VALUES (?, ?)";
-    private static final String GET_ALL = "SELECT * FROM courses";
     private static final String GET_BY_STUDENT_ID =
             "SELECT courses.course_id, courses.course_name, courses.course_description " +
             "  FROM students_courses " +
@@ -34,7 +34,7 @@ public class CourseDaoImpl implements CourseDao {
     }
 
     @Override
-    public void insertCourses(List<Course> courses) throws DAOException {
+    public void insertMany(List<Course> courses) throws DAOException {
         if (courses == null)
             throw new IllegalArgumentException("Null is not allowed");
         try (Connection connection = dataSource.getConnection();
@@ -52,7 +52,7 @@ public class CourseDaoImpl implements CourseDao {
     }
 
     @Override
-    public List<Course> getAllCourses() throws DAOException {
+    public List<Course> getAll() throws DAOException {
         try (Connection connection = dataSource.getConnection();
              PreparedStatement statement = connection.prepareStatement(GET_ALL);
              ResultSet resultSet = statement.executeQuery()) {

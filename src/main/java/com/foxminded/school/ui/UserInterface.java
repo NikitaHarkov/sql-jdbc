@@ -72,7 +72,7 @@ public class UserInterface {
         System.out.println("Enter students count >>> ");
         int studentsCount = getNumber();
         try {
-            List<Group> groups = groupDao.getGroupsByStudentsCount(studentsCount);
+            List<Group> groups = groupDao.getByStudentsCount(studentsCount);
             printGroups(groups);
         } catch (DAOException ex) {
             log.throwing("UserInterface", "findGroups", ex);
@@ -86,7 +86,7 @@ public class UserInterface {
         System.out.print("Enter course name >>> ");
         String courseName = scanner.next();
         try {
-            List<Student> students = studentDao.getStudentsByCourseName(courseName);
+            List<Student> students = studentDao.getByCourseName(courseName);
             System.out.println("Students from course \"" + courseName + "\":");
             System.out.println();
             printStudents(students);
@@ -109,7 +109,7 @@ public class UserInterface {
         newStudent.setFirstName(firstName);
         newStudent.setLastName(lastName);
         try {
-            studentDao.insertStudent(newStudent);
+            studentDao.insertOne(newStudent);
         } catch (DAOException ex) {
             log.throwing("UserInterface", "addNewStudent", ex);
             System.out.println("Cannot add student\n" + ex.getMessage());
@@ -122,7 +122,7 @@ public class UserInterface {
         System.out.println("Delete student by ID: ");
         int studentId = getNumber();
         try {
-            studentDao.deleteStudentById(studentId);
+            studentDao.deleteById(studentId);
         } catch (DAOException ex) {
             log.throwing("UserInterface", "deleteStudentById", ex);
             System.out.println("Cannot delete student by ID\n" + ex.getMessage());
@@ -141,7 +141,7 @@ public class UserInterface {
             int studentId = getNumber();
 
             System.out.println("List of courses: ");
-            printCourses(courseDao.getAllCourses());
+            printCourses(courseDao.getAll());
 
             System.out.println("Enter course id >>> ");
             int courseId = getNumber();

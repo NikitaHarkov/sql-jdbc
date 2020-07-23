@@ -10,13 +10,13 @@ import java.util.Map;
 public interface StudentDao {
     List<Student> getAllStudents() throws DAOException;
 
-    void insertStudents(List<Student> students) throws DAOException;
+    void insertMany(List<Student> students) throws DAOException;
 
-    void insertStudent(Student student) throws DAOException;
+    void insertOne(Student student) throws DAOException;
 
-    void deleteStudentById(int studentId) throws DAOException;
+    void deleteById(int studentId) throws DAOException;
 
-    List<Student> getStudentsByCourseName(String courseName) throws DAOException;
+    List<Student> getByCourseName(String courseName) throws DAOException;
 
     void assignToCourses(Map<Student, List<Course>> map) throws DAOException;
 

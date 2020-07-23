@@ -22,23 +22,27 @@ import java.util.*;
 import static org.junit.jupiter.api.Assertions.*;
 
 class StudentDaoImplTest {
-    DataSource dataSource;
+    private static final String DB_PROPERTIES = "test_connection.properties";
+    private static final String CREATE_TABLES_SCRIPT = "create_test_tables.sql";
     CourseDao courseDao;
     StudentDao studentDao;
 
     @BeforeEach
-    void setConnection() throws IOException, ClassNotFoundException {
-        dataSource = PropertyParser.getConnectionProperties("test_connection.properties");
-        String script = PathReader.getFilePath("create_test_tables.sql");
-        courseDao = new CourseDaoImpl(dataSource);
-        studentDao = new StudentDaoImpl(dataSource);
+    void setConnection() {
         try {
-            Class.forName("org.postgresql.Driver");
-            Connection connection = dataSource.getConnection();
-            ScriptRunner scriptRunner = new ScriptRunner(connection);
-            scriptRunner.runScript(new BufferedReader(new FileReader(script)));
-        } catch (SQLException | ClassNotFoundException e) {
-            System.out.println("Test connection failed: " + e.getMessage());
+            String createTablesScript = PathReader.getFilePath(CREATE_TABLES_SCRIPT);
+            try {
+                DataSource dataSource = PropertyParser.getConnectionProperties(DB_PROPERTIES);
+                PropertyParser.createTablesInDatabase(dataSource, createTablesScript);
+                courseDao = new CourseDaoImpl(dataSource);
+                studentDao = new StudentDaoImpl(dataSource);
+            } catch (DAOException ex) {
+                System.out.println("Connection failed...\n" + ex);
+            } catch (ClassNotFoundException ex) {
+                System.out.println("Cannot load Database Driver\n" + ex);
+            }
+        } catch (IOException ex) {
+            System.out.println("File not found!\n" + ex);
         }
     }
 
@@ -57,14 +61,14 @@ class StudentDaoImplTest {
                 new Student(3, 1, "Bob", "Sudon"),
                 new Student(4, 3, "Tim", "Maraket")
         );
-        studentDao.insertStudents(expected);
+        studentDao.insertMany(expected);
         List<Student> actual = studentDao.getAllStudents();
         assertEquals(expected, actual);
     }
 
     @Test
     void insertStudents_ShouldThrowException_WhenGivenNull() {
-        assertThrows(IllegalArgumentException.class, () -> studentDao.insertStudents(null));
+        assertThrows(IllegalArgumentException.class, () -> studentDao.insertMany(null));
     }
 
     @Test
@@ -75,7 +79,7 @@ class StudentDaoImplTest {
                 new Student(1, 1, "Bob", "Sudon"),
                 new Student(1, 3, "Tim", "Maraket")
         );
-        studentDao.insertStudents(expected);
+        studentDao.insertMany(expected);
         expected.get(1).setId(2);
         expected.get(2).setId(3);
         expected.get(3).setId(4);
@@ -91,22 +95,22 @@ class StudentDaoImplTest {
                 new Student(3, 1, "Bob", "Sudon"),
                 new Student(4, 3, "Tim", "Maraket")
         );
-        studentDao.insertStudents(expected);
+        studentDao.insertMany(expected);
         List<Student> actual = studentDao.getAllStudents();
         assertEquals(expected, actual);
     }
 
     @Test
     void insertStudent_ShouldThrowException_WhenGivenNull() {
-        assertThrows(IllegalArgumentException.class, () -> studentDao.insertStudent(null));
+        assertThrows(IllegalArgumentException.class, () -> studentDao.insertOne(null));
     }
 
     @Test
     void insertStudent_ShouldAddStudentWithCorrectId_WhenGivenStudentWithSameId() throws DAOException {
         Student student = new Student(1, 1, "Kolju", "Sudarshan");
         Student duplicatedStudent = new Student(1, 1, "Merlin", "Monto");
-        studentDao.insertStudent(student);
-        studentDao.insertStudent(duplicatedStudent);
+        studentDao.insertOne(student);
+        studentDao.insertOne(duplicatedStudent);
         List<Student> actual = studentDao.getAllStudents();
         List<Student> expected = Arrays.asList(student, duplicatedStudent);
         expected.get(1).setId(2);
@@ -116,7 +120,7 @@ class StudentDaoImplTest {
     @Test
     void insertStudent_ShouldAddStudentToTable_WhenGivenStudent() throws DAOException {
         Student student = new Student(1, 1, "Kolju", "Sudarshan");
-        studentDao.insertStudent(student);
+        studentDao.insertOne(student);
         List<Student> actual = studentDao.getAllStudents();
         List<Student> expected = Arrays.asList(student);
         assertEquals(expected, actual);
@@ -130,8 +134,8 @@ class StudentDaoImplTest {
                 new Student(3, 1, "Bob", "Sudon"),
                 new Student(4, 3, "Tim", "Maraket")
         );
-        studentDao.insertStudents(expected);
-        studentDao.deleteStudentById(8);
+        studentDao.insertMany(expected);
+        studentDao.deleteById(8);
         List<Student> actual = studentDao.getAllStudents();
         assertEquals(expected, actual);
     }
@@ -144,8 +148,8 @@ class StudentDaoImplTest {
                 new Student(3, 1, "Bob", "Sudon"),
                 new Student(4, 3, "Tim", "Maraket")
         );
-        studentDao.insertStudents(students);
-        studentDao.deleteStudentById(2);
+        studentDao.insertMany(students);
+        studentDao.deleteById(2);
         List<Student> expected = Arrays.asList(students.get(0), students.get(2), students.get(3));
         List<Student> actual = studentDao.getAllStudents();
         assertEquals(expected, actual);
@@ -153,7 +157,7 @@ class StudentDaoImplTest {
 
     @Test
     void getStudentsByCourseName_ShouldThrowException_WhenGivenNull() {
-        assertThrows(IllegalArgumentException.class, () -> studentDao.getStudentsByCourseName(null));
+        assertThrows(IllegalArgumentException.class, () -> studentDao.getByCourseName(null));
     }
 
     @Test
@@ -169,10 +173,10 @@ class StudentDaoImplTest {
                 new Student(3, 1, "Bob", "Sudon"),
                 new Student(4, 3, "Tim", "Maraket")
         );
-        courseDao.insertCourses(courses);
-        studentDao.insertStudents(students);
+        courseDao.insertMany(courses);
+        studentDao.insertMany(students);
         List<Student> expected = new ArrayList<>();
-        List<Student> actual = studentDao.getStudentsByCourseName("");
+        List<Student> actual = studentDao.getByCourseName("");
         assertEquals(expected, actual);
     }
 
@@ -189,13 +193,13 @@ class StudentDaoImplTest {
                 new Student(3, 1, "Bob", "Sudon"),
                 new Student(4, 3, "Tim", "Maraket")
         );
-        courseDao.insertCourses(courses);
-        studentDao.insertStudents(students);
+        courseDao.insertMany(courses);
+        studentDao.insertMany(students);
         studentDao.assignToCourse(1, 2);
         studentDao.assignToCourse(2, 2);
         studentDao.assignToCourse(3, 1);
         List<Student> expected = Arrays.asList(students.get(0), students.get(1));
-        List<Student> actual = studentDao.getStudentsByCourseName("History");
+        List<Student> actual = studentDao.getByCourseName("History");
         assertEquals(expected, actual);
     }
 
@@ -208,7 +212,7 @@ class StudentDaoImplTest {
     void assignToCourses_ShouldNotAssignAnything_WhenGivenEmptyMap() throws DAOException {
         Map<Student, List<Course>> map = new HashMap<>();
         Student student = new Student(1, 1, "Kolju", "Sudarshan");
-        studentDao.insertStudent(student);
+        studentDao.insertOne(student);
         studentDao.assignToCourses(map);
         List<Course> expected = new ArrayList<>();
         List<Course> actual = courseDao.getByStudentId(student.getId());
@@ -223,8 +227,8 @@ class StudentDaoImplTest {
                 new Course(2, "History", "This is History"),
                 new Course(3, "Geography", "This is Geography")
         );
-        studentDao.insertStudent(student);
-        courseDao.insertCourses(expected);
+        studentDao.insertOne(student);
+        courseDao.insertMany(expected);
         Map<Student, List<Course>> map = Map.of(student, expected);
         studentDao.assignToCourses(map);
         List<Course> actual = courseDao.getByStudentId(student.getId());
@@ -239,7 +243,7 @@ class StudentDaoImplTest {
     @Test
     void assignToCourse_ShouldThrowException_WhenNoCourseWithPassedId() throws DAOException {
         Student student = new Student(1, 1, "Kolju", "Sudarshan");
-        studentDao.insertStudent(student);
+        studentDao.insertOne(student);
         assertThrows(DAOException.class, () -> studentDao.assignToCourse(1, 1));
     }
 
@@ -250,7 +254,7 @@ class StudentDaoImplTest {
                 new Course(2, "History", "This is History"),
                 new Course(3, "Geography", "This is Geography")
         );
-        courseDao.insertCourses(courses);
+        courseDao.insertMany(courses);
         assertThrows(DAOException.class, () -> studentDao.assignToCourse(1, 2));
     }
 
@@ -262,8 +266,8 @@ class StudentDaoImplTest {
                 new Course(3, "Geography", "This is Geography")
         );
         Student student = new Student(1, 1, "Kolju", "Sudarshan");
-        courseDao.insertCourses(courses);
-        studentDao.insertStudent(student);
+        courseDao.insertMany(courses);
+        studentDao.insertOne(student);
         studentDao.assignToCourse(1, 2);
         List<Course> expected = Arrays.asList(courses.get(1));
         List<Course> actual = courseDao.getByStudentId(student.getId());
@@ -281,7 +285,7 @@ class StudentDaoImplTest {
     @Test
     void deleteFromCourse_ShouldDoNothing_WhenCourseWithPassedIdNotExists() throws DAOException {
         Student student = new Student(1, 1, "Kolju", "Sudarshan");
-        studentDao.insertStudent(student);
+        studentDao.insertOne(student);
         List<Course> expected = courseDao.getByStudentId(student.getId());
         studentDao.deleteFromCourse(1, 1);
         List<Course> actual = courseDao.getByStudentId(student.getId());
@@ -296,8 +300,8 @@ class StudentDaoImplTest {
                 new Course(3, "Geography", "This is Geography")
         );
         Student student = new Student(1, 1, "Kolju", "Sudarshan");
-        courseDao.insertCourses(courses);
-        studentDao.insertStudent(student);
+        courseDao.insertMany(courses);
+        studentDao.insertOne(student);
         Map<Student, List<Course>> map = Map.of(student, courses);
         studentDao.assignToCourses(map);
         studentDao.deleteFromCourse(student.getId(), 2);
@@ -310,7 +314,7 @@ class StudentDaoImplTest {
     @Test
     void deleteStudentById_ShouldDoNothing_WhenNoStudentByPassedId() throws DAOException {
         List<Student> expected = studentDao.getAllStudents();
-        studentDao.deleteStudentById(1);
+        studentDao.deleteById(1);
         List<Student> actual = studentDao.getAllStudents();
         assertEquals(expected, actual);
     }
@@ -323,9 +327,9 @@ class StudentDaoImplTest {
                 new Student(3, 1, "Bob", "Sudon"),
                 new Student(4, 3, "Tim", "Maraket")
         );
-        studentDao.insertStudents(students);
+        studentDao.insertMany(students);
         List<Student> expected = Arrays.asList(students.get(0), students.get(2), students.get(3));
-        studentDao.deleteStudentById(2);
+        studentDao.deleteById(2);
         List<Student> actual = studentDao.getAllStudents();
         assertEquals(expected, actual);
     }

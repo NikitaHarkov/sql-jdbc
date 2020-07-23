@@ -19,16 +19,16 @@ public class DataGenerator {
         try{
             List<Group> groups = data.getGroups();
             GroupDao groupDao = new GroupDaoImpl(dataSource);
-            groupDao.insertGroups(groups);
+            groupDao.insertMany(groups);
 
             List<Course> courses = data.getCourses();
             CourseDao courseDao = new CourseDaoImpl(dataSource);
-            courseDao.insertCourses(courses);
+            courseDao.insertMany(courses);
 
             List<Student> students = data.getStudents(groups);
             Map<Student, List<Course>> studentCourses = data.getStudentsCourses(students, courses);
             StudentDao studentDao = new StudentDaoImpl(dataSource);
-            studentDao.insertStudents(students);
+            studentDao.insertMany(students);
             studentDao.assignToCourses(studentCourses);
         }catch (DAOException ex){
             log.throwing("DataGenerator", "generateTestData",ex);

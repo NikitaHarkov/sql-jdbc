@@ -24,36 +24,40 @@ import java.util.List;
 import static org.junit.jupiter.api.Assertions.*;
 
 class GroupDaoImplTest {
-    DataSource dataSource;
+    private static final String DB_PROPERTIES = "test_connection.properties";
+    private static final String CREATE_TABLES_SCRIPT = "create_test_tables.sql";
     GroupDao groupDao;
     StudentDao studentDao;
 
     @BeforeEach
-    void setConnection() throws IOException, ClassNotFoundException {
-        dataSource = PropertyParser.getConnectionProperties("test_connection.properties");
-        String script = PathReader.getFilePath("create_test_tables.sql");
-        groupDao = new GroupDaoImpl(dataSource);
-        studentDao = new StudentDaoImpl(dataSource);
+    void setConnection() {
         try {
-            Class.forName("org.postgresql.Driver");
-            Connection connection = dataSource.getConnection();
-            ScriptRunner scriptRunner = new ScriptRunner(connection);
-            scriptRunner.runScript(new BufferedReader(new FileReader(script)));
-        } catch (SQLException | ClassNotFoundException e) {
-            System.out.println("Test connection failed: " + e.getMessage());
+            String createTablesScript = PathReader.getFilePath(CREATE_TABLES_SCRIPT);
+            try {
+                DataSource dataSource = PropertyParser.getConnectionProperties(DB_PROPERTIES);
+                PropertyParser.createTablesInDatabase(dataSource, createTablesScript);
+                groupDao = new GroupDaoImpl(dataSource);
+                studentDao = new StudentDaoImpl(dataSource);
+            } catch (DAOException ex) {
+                System.out.println("Connection failed...\n" + ex);
+            } catch (ClassNotFoundException ex) {
+                System.out.println("Cannot load Database Driver\n" + ex);
+            }
+        } catch (IOException ex) {
+            System.out.println("File not found!\n" + ex);
         }
     }
 
     @Test
     void insertGroups_ShouldThrowException_WhenGivenNull() {
-        assertThrows(IllegalArgumentException.class, () -> groupDao.insertGroups(null));
+        assertThrows(IllegalArgumentException.class, () -> groupDao.insertMany(null));
     }
 
     @Test
     void insertGroups_ShouldAddNothing_WhenGivenEmptyList() throws DAOException {
         List<Group> expected = new ArrayList<>();
-        groupDao.insertGroups(expected);
-        List<Group> actual = groupDao.getGroups();
+        groupDao.insertMany(expected);
+        List<Group> actual = groupDao.getAll();
         assertEquals(expected, actual);
     }
 
@@ -63,9 +67,9 @@ class GroupDaoImplTest {
                 new Group(1, "AS-15"),
                 new Group(1, "DC-28")
         );
-        groupDao.insertGroups(expected);
+        groupDao.insertMany(expected);
         expected.get(1).setId(2);
-        List<Group> actual = groupDao.getGroups();
+        List<Group> actual = groupDao.getAll();
         assertEquals(expected, actual);
     }
 
@@ -75,15 +79,15 @@ class GroupDaoImplTest {
                 new Group(1, "AS-15"),
                 new Group(2, "DC-28")
         );
-        groupDao.insertGroups(expected);
-        List<Group> actual = groupDao.getGroups();
+        groupDao.insertMany(expected);
+        List<Group> actual = groupDao.getAll();
         assertEquals(expected, actual);
     }
 
     @Test
     void getGroupsByStudentsCount_ShouldReturnEmptyList_WhenTableDoNotContainGroups() throws DAOException {
         List<Group> expected = new ArrayList<>();
-        List<Group> actual = groupDao.getGroupsByStudentsCount(0);
+        List<Group> actual = groupDao.getByStudentsCount(0);
         assertEquals(expected, actual);
     }
 
@@ -100,15 +104,15 @@ class GroupDaoImplTest {
                 new Student(3, 2, "Position", "Hello"),
                 new Student(4, 3, "Sick", "Liquir")
         );
-        groupDao.insertGroups(groups);
-        studentDao.insertStudents(students);
+        groupDao.insertMany(groups);
+        studentDao.insertMany(students);
         List<Group> expected = Arrays.asList(
                 groups.get(0),
                 groups.get(2)
         );
         expected.get(0).setStudentsCount(1);
         expected.get(1).setStudentsCount(1);
-        List<Group> actual = groupDao.getGroupsByStudentsCount(1);
+        List<Group> actual = groupDao.getByStudentsCount(1);
         assertTrue(expected.size() == actual.size() && expected.containsAll(actual) && actual.containsAll(expected));
     }
 }

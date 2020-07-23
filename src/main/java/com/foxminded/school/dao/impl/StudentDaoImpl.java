@@ -18,10 +18,11 @@ import java.util.logging.Logger;
 public class StudentDaoImpl implements StudentDao {
     private static final Logger log = Logger.getLogger(StudentDaoImpl.class.getName());
     private static final String GET_ALL = "SELECT * FROM students";
+    private static final String DELETE_BY_ID = "DELETE FROM students WHERE student_id = ?";
+    private static final String ASSIGN_TO_COURSE = "INSERT INTO students_courses (student_id, course_id) VALUES (?, ?)";
     private static final String INSERT_STUDENTS_QUERY =
             "INSERT INTO students (group_id, first_name, last_name) " +
             "     VALUES (?, ?, ?)";
-    private static final String DELETE = "DELETE FROM students WHERE student_id = ?";
     private static final String GET_BY_COURSE_NAME =
             "SELECT students.student_id, students.group_id, students.first_name, students.last_name " +
             "  FROM students_courses " +
@@ -31,7 +32,6 @@ public class StudentDaoImpl implements StudentDao {
             "       INNER  JOIN courses " +
             "       ON students_courses.course_id = courses.course_id " +
             " WHERE courses.course_name = ?";
-    private static final String ASSIGN_TO_COURSE = "INSERT INTO students_courses (student_id, course_id) VALUES (?, ?)";
     private static final String DELETE_FROM_COURSE =
             "DELETE " +
             "  FROM students_courses " +
@@ -57,7 +57,7 @@ public class StudentDaoImpl implements StudentDao {
     }
 
     @Override
-    public void insertStudents(List<Student> students) throws DAOException {
+    public void insertMany(List<Student> students) throws DAOException {
         if (students == null)
             throw new IllegalArgumentException("Null in not allowed");
         try (Connection connection = dataSource.getConnection();
@@ -77,7 +77,7 @@ public class StudentDaoImpl implements StudentDao {
     }
 
     @Override
-    public void insertStudent(Student student) throws DAOException {
+    public void insertOne(Student student) throws DAOException {
         if (student == null)
             throw new IllegalArgumentException("Null is not allowed");
         try (Connection connection = dataSource.getConnection();
@@ -93,9 +93,9 @@ public class StudentDaoImpl implements StudentDao {
     }
 
     @Override
-    public void deleteStudentById(int studentId) throws DAOException {
+    public void deleteById(int studentId) throws DAOException {
         try (Connection connection = dataSource.getConnection();
-             PreparedStatement statement = connection.prepareStatement(DELETE)) {
+             PreparedStatement statement = connection.prepareStatement(DELETE_BY_ID)) {
             statement.setInt(1, studentId);
             statement.executeUpdate();
         } catch (SQLException e) {
@@ -105,7 +105,7 @@ public class StudentDaoImpl implements StudentDao {
     }
 
     @Override
-    public List<Student> getStudentsByCourseName(String courseName) throws DAOException {
+    public List<Student> getByCourseName(String courseName) throws DAOException {
         if (courseName == null)
             throw new IllegalArgumentException("Null is now allowed");
         try (Connection connection = dataSource.getConnection();

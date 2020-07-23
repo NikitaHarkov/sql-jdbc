@@ -25,29 +25,33 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 
 class CourseDaoImplTest {
-    DataSource dataSource;
+    private static final String DB_PROPERTIES = "test_connection.properties";
+    private static final String CREATE_TABLES_SCRIPT = "create_test_tables.sql";
     CourseDao courseDao;
     StudentDao studentDao;
 
     @BeforeEach
-    void setConnection() throws IOException, ClassNotFoundException {
-        dataSource = PropertyParser.getConnectionProperties("test_connection.properties");
-        String script = PathReader.getFilePath("create_test_tables.sql");
-        courseDao = new CourseDaoImpl(dataSource);
-        studentDao = new StudentDaoImpl(dataSource);
+    void setConnection() {
         try {
-            Class.forName("org.postgresql.Driver");
-            Connection connection = dataSource.getConnection();
-            ScriptRunner scriptRunner = new ScriptRunner(connection);
-            scriptRunner.runScript(new BufferedReader(new FileReader(script)));
-        } catch (SQLException | ClassNotFoundException e) {
-            System.out.println("Test connection failed: " + e.getMessage());
+            String createTablesScript = PathReader.getFilePath(CREATE_TABLES_SCRIPT);
+            try {
+                DataSource dataSource = PropertyParser.getConnectionProperties(DB_PROPERTIES);
+                PropertyParser.createTablesInDatabase(dataSource, createTablesScript);
+                courseDao = new CourseDaoImpl(dataSource);
+                studentDao = new StudentDaoImpl(dataSource);
+            } catch (DAOException ex) {
+                System.out.println("Connection failed...\n" + ex);
+            } catch (ClassNotFoundException ex) {
+                System.out.println("Cannot load Database Driver\n" + ex);
+            }
+        } catch (IOException ex) {
+            System.out.println("File not found!\n" + ex);
         }
     }
 
     @Test
     void insertCourses_ShouldThrowException_WhenGivenNull() {
-        assertThrows(IllegalArgumentException.class, () -> courseDao.insertCourses(null));
+        assertThrows(IllegalArgumentException.class, () -> courseDao.insertMany(null));
     }
 
     @Test
@@ -56,10 +60,10 @@ class CourseDaoImplTest {
                 new Course(1, "Math", "This is mathematics"),
                 new Course(1, "History", "This is History")
         );
-        courseDao.insertCourses(duplicatedId);
-        List<Course> actual = courseDao.getAllCourses();
+        courseDao.insertMany(duplicatedId);
+        List<Course> actual = courseDao.getAll();
         duplicatedId.get(1).setId(2);
-        assertEquals(duplicatedId,actual);
+        assertEquals(duplicatedId, actual);
     }
 
     @Test
@@ -68,15 +72,15 @@ class CourseDaoImplTest {
                 new Course(1, "Math", "This is mathematics"),
                 new Course(2, "History", "This is History")
         );
-        courseDao.insertCourses(expected);
-        List<Course> actual = courseDao.getAllCourses();
+        courseDao.insertMany(expected);
+        List<Course> actual = courseDao.getAll();
         assertEquals(expected, actual);
     }
 
     @Test
     void getAllCourses_ShouldReturnEmptyList_WhenTableIsEmpty() throws DAOException {
         List<Course> expected = new ArrayList<>();
-        List<Course> actual = courseDao.getAllCourses();
+        List<Course> actual = courseDao.getAll();
         assertEquals(expected, actual);
     }
 
@@ -87,8 +91,8 @@ class CourseDaoImplTest {
                 new Course(2, "History", "This is History"),
                 new Course(3, "Geography", "This is Geography")
         );
-        courseDao.insertCourses(expected);
-        List<Course> actual = courseDao.getAllCourses();
+        courseDao.insertMany(expected);
+        List<Course> actual = courseDao.getAll();
         assertEquals(expected, actual);
     }
 
@@ -111,8 +115,8 @@ class CourseDaoImplTest {
                 new Student(2, 2, "Name", "Lastname")
 
         );
-        studentDao.insertStudents(students);
-        courseDao.insertCourses(courses);
+        studentDao.insertMany(students);
+        courseDao.insertMany(courses);
         studentDao.assignToCourse(1, 3);
         List<Course> expected = Arrays.asList(courses.get(2));
         List<Course> actual = courseDao.getByStudentId(1);

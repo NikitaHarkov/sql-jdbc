@@ -15,8 +15,8 @@ import java.util.logging.Logger;
 
 public class GroupDaoImpl implements GroupDao {
     private static final Logger log = Logger.getLogger(GroupDaoImpl.class.getName());
-    private static final String INSERT_GROUP_QUERY = "INSERT INTO groups (group_name) VALUES (?)";
     private static final String GET_ALL = "SELECT * FROM groups";
+    private static final String INSERT_GROUP_QUERY = "INSERT INTO groups (group_name) VALUES (?)";
     private static final String GET_BY_STUDENTS_COUNT =
             "SELECT groups.group_id, groups.group_name, COUNT(students.student_id) " +
             "  FROM groups " +
@@ -32,7 +32,7 @@ public class GroupDaoImpl implements GroupDao {
     }
 
     @Override
-    public void insertGroups(List<Group> groups) throws DAOException {
+    public void insertMany(List<Group> groups) throws DAOException {
         if (groups == null)
             throw new IllegalArgumentException("Null is not allowed");
         try (Connection connection = dataSource.getConnection();
@@ -49,7 +49,7 @@ public class GroupDaoImpl implements GroupDao {
     }
 
     @Override
-    public List<Group> getGroups() throws DAOException {
+    public List<Group> getAll() throws DAOException {
         try {
             Connection connection = dataSource.getConnection();
             PreparedStatement statement = connection.prepareStatement(GET_ALL);
@@ -62,7 +62,7 @@ public class GroupDaoImpl implements GroupDao {
     }
 
     @Override
-    public List<Group> getGroupsByStudentsCount(int count) throws DAOException {
+    public List<Group> getByStudentsCount(int count) throws DAOException {
         List<Group> result = new ArrayList<>();
         try (Connection connection = dataSource.getConnection();
              PreparedStatement statement = connection.prepareStatement(GET_BY_STUDENTS_COUNT)) {
