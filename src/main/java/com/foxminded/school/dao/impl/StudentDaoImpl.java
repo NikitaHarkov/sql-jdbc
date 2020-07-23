@@ -17,9 +17,11 @@ import java.util.logging.Logger;
 
 public class StudentDaoImpl implements StudentDao {
     private static final Logger log = Logger.getLogger(StudentDaoImpl.class.getName());
-    private static final String GET_ALL = "SELECT * FROM students";
-    private static final String DELETE_BY_ID = "DELETE FROM students WHERE student_id = ?";
-    private static final String ASSIGN_TO_COURSE = "INSERT INTO students_courses (student_id, course_id) VALUES (?, ?)";
+    private static final String GET_ALL_STUDENTS_QUERY = "SELECT * FROM students";
+    private static final String DELETE_BY_ID_QUERY = "DELETE FROM students WHERE student_id = ?";
+    private static final String ASSIGN_TO_COURSE_QUERY =
+            "INSERT INTO students_courses (student_id, course_id) " +
+            "     VALUES (?, ?)";
     private static final String INSERT_STUDENTS_QUERY =
             "INSERT INTO students (group_id, first_name, last_name) " +
             "     VALUES (?, ?, ?)";
@@ -45,9 +47,9 @@ public class StudentDaoImpl implements StudentDao {
     }
 
     @Override
-    public List<Student> getAllStudents() throws DAOException {
+    public List<Student> getAll() throws DAOException {
         try (Connection connection = dataSource.getConnection();
-             PreparedStatement statement = connection.prepareStatement(GET_ALL);
+             PreparedStatement statement = connection.prepareStatement(GET_ALL_STUDENTS_QUERY);
              ResultSet resultSet = statement.executeQuery()) {
             return processResultSet(resultSet);
         } catch (SQLException e) {
@@ -57,7 +59,7 @@ public class StudentDaoImpl implements StudentDao {
     }
 
     @Override
-    public void insertMany(List<Student> students) throws DAOException {
+    public void insert(List<Student> students) throws DAOException {
         if (students == null)
             throw new IllegalArgumentException("Null in not allowed");
         try (Connection connection = dataSource.getConnection();
@@ -77,7 +79,7 @@ public class StudentDaoImpl implements StudentDao {
     }
 
     @Override
-    public void insertOne(Student student) throws DAOException {
+    public void insert(Student student) throws DAOException {
         if (student == null)
             throw new IllegalArgumentException("Null is not allowed");
         try (Connection connection = dataSource.getConnection();
@@ -95,7 +97,7 @@ public class StudentDaoImpl implements StudentDao {
     @Override
     public void deleteById(int studentId) throws DAOException {
         try (Connection connection = dataSource.getConnection();
-             PreparedStatement statement = connection.prepareStatement(DELETE_BY_ID)) {
+             PreparedStatement statement = connection.prepareStatement(DELETE_BY_ID_QUERY)) {
             statement.setInt(1, studentId);
             statement.executeUpdate();
         } catch (SQLException e) {
@@ -125,7 +127,7 @@ public class StudentDaoImpl implements StudentDao {
         if (map == null)
             throw new IllegalArgumentException("Null is not allowed");
         try (Connection connection = dataSource.getConnection();
-             PreparedStatement statement = connection.prepareStatement(ASSIGN_TO_COURSE)) {
+             PreparedStatement statement = connection.prepareStatement(ASSIGN_TO_COURSE_QUERY)) {
             for (Map.Entry<Student, List<Course>> entry : map.entrySet()) {
                 Student student = entry.getKey();
                 for (Course course : entry.getValue()) {
@@ -144,7 +146,7 @@ public class StudentDaoImpl implements StudentDao {
     @Override
     public void assignToCourse(int studentId, int courseId) throws DAOException {
         try (Connection connection = dataSource.getConnection();
-             PreparedStatement statement = connection.prepareStatement(ASSIGN_TO_COURSE)) {
+             PreparedStatement statement = connection.prepareStatement(ASSIGN_TO_COURSE_QUERY)) {
             statement.setInt(1, studentId);
             statement.setInt(2, courseId);
             statement.executeUpdate();

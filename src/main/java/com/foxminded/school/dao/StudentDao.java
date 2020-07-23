@@ -8,11 +8,11 @@ import java.util.List;
 import java.util.Map;
 
 public interface StudentDao {
-    List<Student> getAllStudents() throws DAOException;
+    List<Student> getAll() throws DAOException;
 
-    void insertMany(List<Student> students) throws DAOException;
+    void insert(List<Student> students) throws DAOException;
 
-    void insertOne(Student student) throws DAOException;
+    void insert(Student student) throws DAOException;
 
     void deleteById(int studentId) throws DAOException;
 

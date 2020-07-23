@@ -15,9 +15,9 @@ import java.util.logging.Logger;
 
 public class GroupDaoImpl implements GroupDao {
     private static final Logger log = Logger.getLogger(GroupDaoImpl.class.getName());
-    private static final String GET_ALL = "SELECT * FROM groups";
+    private static final String GET_ALL_GROUPS_QUERY = "SELECT * FROM groups";
     private static final String INSERT_GROUP_QUERY = "INSERT INTO groups (group_name) VALUES (?)";
-    private static final String GET_BY_STUDENTS_COUNT =
+    private static final String GET_BY_STUDENTS_COUNT_QUERY =
             "SELECT groups.group_id, groups.group_name, COUNT(students.student_id) " +
             "  FROM groups " +
             "       LEFT JOIN students " +
@@ -32,7 +32,7 @@ public class GroupDaoImpl implements GroupDao {
     }
 
     @Override
-    public void insertMany(List<Group> groups) throws DAOException {
+    public void insert(List<Group> groups) throws DAOException {
         if (groups == null)
             throw new IllegalArgumentException("Null is not allowed");
         try (Connection connection = dataSource.getConnection();
@@ -52,7 +52,7 @@ public class GroupDaoImpl implements GroupDao {
     public List<Group> getAll() throws DAOException {
         try {
             Connection connection = dataSource.getConnection();
-            PreparedStatement statement = connection.prepareStatement(GET_ALL);
+            PreparedStatement statement = connection.prepareStatement(GET_ALL_GROUPS_QUERY);
             ResultSet resultSet = statement.executeQuery();
             return processResultSet(resultSet);
         } catch (SQLException e) {
@@ -65,7 +65,7 @@ public class GroupDaoImpl implements GroupDao {
     public List<Group> getByStudentsCount(int count) throws DAOException {
         List<Group> result = new ArrayList<>();
         try (Connection connection = dataSource.getConnection();
-             PreparedStatement statement = connection.prepareStatement(GET_BY_STUDENTS_COUNT)) {
+             PreparedStatement statement = connection.prepareStatement(GET_BY_STUDENTS_COUNT_QUERY)) {
             statement.setInt(1, count);
             try (ResultSet resultSet = statement.executeQuery()) {
                 while (resultSet.next()) {

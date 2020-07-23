@@ -8,8 +8,8 @@ import java.util.*;
 import java.util.stream.Collectors;
 
 public class Data {
-    private static final int FROM_UPPER_LETTER_A = 65;
-    private static final int TO_UPPER_LETTER_Z = 90;
+    private static final int UPPER_LETTER_A_CHARCODE = 65;
+    private static final int UPPER_LETTER_Z_CHARCODE = 90;
     private static final int STREAM_SIZE = 2;
     private static final int STUDENTS_AMOUNT = 200;
     private final Random random = new Random();
@@ -24,7 +24,7 @@ public class Data {
             Group group = new Group();
             group.setId(i + 1);
             StringBuilder course = new StringBuilder();
-            String letters = random.ints(STREAM_SIZE, FROM_UPPER_LETTER_A, TO_UPPER_LETTER_Z)
+            String letters = random.ints(STREAM_SIZE, UPPER_LETTER_A_CHARCODE, UPPER_LETTER_Z_CHARCODE)
                     .mapToObj(upperLetter -> String.valueOf((char) upperLetter))
                     .collect(Collectors.joining());
             String numbers = random.ints(2, 0, 9)

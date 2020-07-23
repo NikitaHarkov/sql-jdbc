@@ -16,11 +16,11 @@ import java.util.logging.Logger;
 
 public class CourseDaoImpl implements CourseDao {
     private static final Logger log = Logger.getLogger(GroupDaoImpl.class.getName());
-    private static final String GET_ALL = "SELECT * FROM courses";
+    private static final String GET_ALL_COURSES_QUERY = "SELECT * FROM courses";
     private static final String INSERT_COURSE_QUERY =
             "INSERT INTO courses (course_name, course_description) " +
             "     VALUES (?, ?)";
-    private static final String GET_BY_STUDENT_ID =
+    private static final String GET_BY_STUDENT_ID_QUERY =
             "SELECT courses.course_id, courses.course_name, courses.course_description " +
             "  FROM students_courses " +
             "       INNER JOIN courses " +
@@ -34,7 +34,7 @@ public class CourseDaoImpl implements CourseDao {
     }
 
     @Override
-    public void insertMany(List<Course> courses) throws DAOException {
+    public void insert(List<Course> courses) throws DAOException {
         if (courses == null)
             throw new IllegalArgumentException("Null is not allowed");
         try (Connection connection = dataSource.getConnection();
@@ -54,7 +54,7 @@ public class CourseDaoImpl implements CourseDao {
     @Override
     public List<Course> getAll() throws DAOException {
         try (Connection connection = dataSource.getConnection();
-             PreparedStatement statement = connection.prepareStatement(GET_ALL);
+             PreparedStatement statement = connection.prepareStatement(GET_ALL_COURSES_QUERY);
              ResultSet resultSet = statement.executeQuery()) {
             return processResultSet(resultSet);
         } catch (SQLException e) {
@@ -66,7 +66,7 @@ public class CourseDaoImpl implements CourseDao {
     @Override
     public List<Course> getByStudentId(int studentId) throws DAOException {
         try (Connection connection = dataSource.getConnection();
-             PreparedStatement statement = connection.prepareStatement(GET_BY_STUDENT_ID)) {
+             PreparedStatement statement = connection.prepareStatement(GET_BY_STUDENT_ID_QUERY)) {
             statement.setInt(1, studentId);
             try (ResultSet resultSet = statement.executeQuery()) {
                 return processResultSet(resultSet);

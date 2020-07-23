@@ -6,7 +6,7 @@ import com.foxminded.school.exception.DAOException;
 import java.util.List;
 
 public interface GroupDao {
-    void insertMany(List<Group> groups) throws DAOException;
+    void insert(List<Group> groups) throws DAOException;
 
     List<Group> getAll() throws DAOException;
 

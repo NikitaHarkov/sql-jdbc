@@ -109,7 +109,7 @@ public class UserInterface {
         newStudent.setFirstName(firstName);
         newStudent.setLastName(lastName);
         try {
-            studentDao.insertOne(newStudent);
+            studentDao.insert(newStudent);
         } catch (DAOException ex) {
             log.throwing("UserInterface", "addNewStudent", ex);
             System.out.println("Cannot add student\n" + ex.getMessage());
@@ -135,7 +135,7 @@ public class UserInterface {
         System.out.println("Add student to course: ");
         System.out.println("List of students: ");
         try {
-            printStudents(studentDao.getAllStudents());
+            printStudents(studentDao.getAll());
 
             System.out.println("Enter student id >>> ");
             int studentId = getNumber();
@@ -163,7 +163,7 @@ public class UserInterface {
         System.out.println("Remove student course: ");
         System.out.println("List of students: ");
         try {
-            printStudents(studentDao.getAllStudents());
+            printStudents(studentDao.getAll());
 
             System.out.println("Enter student id >>> ");
             int studentId = getNumber();

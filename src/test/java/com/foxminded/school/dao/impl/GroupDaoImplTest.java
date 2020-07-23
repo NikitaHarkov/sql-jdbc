@@ -8,15 +8,10 @@ import com.foxminded.school.domain.Group;
 import com.foxminded.school.domain.Student;
 import com.foxminded.school.service.PathReader;
 import com.foxminded.school.service.PropertyParser;
-import org.apache.ibatis.jdbc.ScriptRunner;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
-import java.io.BufferedReader;
-import java.io.FileReader;
 import java.io.IOException;
-import java.sql.Connection;
-import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -50,49 +45,49 @@ class GroupDaoImplTest {
 
     @Test
     void insertGroups_ShouldThrowException_WhenGivenNull() {
-        assertThrows(IllegalArgumentException.class, () -> groupDao.insertMany(null));
+        assertThrows(IllegalArgumentException.class, () -> groupDao.insert(null));
     }
 
     @Test
-    void insertGroups_ShouldAddNothing_WhenGivenEmptyList() throws DAOException {
+    void insert_ShouldAddNothing_WhenGivenEmptyList() throws DAOException {
         List<Group> expected = new ArrayList<>();
-        groupDao.insertMany(expected);
+        groupDao.insert(expected);
         List<Group> actual = groupDao.getAll();
         assertEquals(expected, actual);
     }
 
     @Test
-    void insertGroups_ShouldAddGroupsWithCorrectId_WhenGivenDuplicatedId() throws DAOException {
+    void insert_ShouldAddGroupsWithCorrectId_WhenGivenDuplicatedId() throws DAOException {
         List<Group> expected = Arrays.asList(
                 new Group(1, "AS-15"),
                 new Group(1, "DC-28")
         );
-        groupDao.insertMany(expected);
+        groupDao.insert(expected);
         expected.get(1).setId(2);
         List<Group> actual = groupDao.getAll();
         assertEquals(expected, actual);
     }
 
     @Test
-    void insertGroups_ShouldAddToDatabaseGroups_WhenGivenGroups() throws DAOException {
+    void insert_ShouldAddToDatabaseGroups_WhenGivenGroups() throws DAOException {
         List<Group> expected = Arrays.asList(
                 new Group(1, "AS-15"),
                 new Group(2, "DC-28")
         );
-        groupDao.insertMany(expected);
+        groupDao.insert(expected);
         List<Group> actual = groupDao.getAll();
         assertEquals(expected, actual);
     }
 
     @Test
-    void getGroupsByStudentsCount_ShouldReturnEmptyList_WhenTableDoNotContainGroups() throws DAOException {
+    void getByStudentsCount_ShouldReturnEmptyList_WhenTableDoNotContainGroups() throws DAOException {
         List<Group> expected = new ArrayList<>();
         List<Group> actual = groupDao.getByStudentsCount(0);
         assertEquals(expected, actual);
     }
 
     @Test
-    void getGroupsByStudentsCount_ShouldReturnGroupsWithLessOrEqualsStudentCount_WhenCountIsPassed() throws DAOException {
+    void getByStudentsCount_ShouldReturnGroupsWithLessOrEqualsStudentCount_WhenCountIsPassed() throws DAOException {
         List<Group> groups = Arrays.asList(
                 new Group(1, "AS-15"),
                 new Group(2, "DC-28"),
@@ -104,8 +99,8 @@ class GroupDaoImplTest {
                 new Student(3, 2, "Position", "Hello"),
                 new Student(4, 3, "Sick", "Liquir")
         );
-        groupDao.insertMany(groups);
-        studentDao.insertMany(students);
+        groupDao.insert(groups);
+        studentDao.insert(students);
         List<Group> expected = Arrays.asList(
                 groups.get(0),
                 groups.get(2)
